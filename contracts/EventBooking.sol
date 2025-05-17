@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: GPL-3.0
-
 pragma solidity >=0.7.0 <0.9.0;
 
 contract EventBooking {
@@ -36,7 +35,15 @@ contract EventBooking {
             events[eventId].registered < events[eventId].capacity,
             "Event is full"
         );
+
         reservations[msg.sender][eventId] = true;
         events[eventId].registered++;
+    }
+    function getAllEvents() public view returns (Event[] memory) {
+        Event[] memory allEvents = new Event[](eventCount);
+        for (uint i = 0; i < eventCount; i++) {
+            allEvents[i] = events[i];
+        }
+        return allEvents;
     }
 }

@@ -1,16 +1,17 @@
+import React from 'react';
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
-import EventItem from './EventItem';
+// import EventItem from './EventItem';
 
-function EventList({ contract, account, reserveSpot }) {
-  const [events, setEvents] = useState([]);
+function EventList({ contract, account, reserveEvent, loading }) {
+  const [eventsData, setEventsData] = useState([]);
 
   const fetchEvents = useCallback(async () => {
     if (!contract) return;
     try {
       const count = await contract.eventCount();
       if (count.toNumber() === 0) {
-        setEvents([]); // No events available
+        setEventsData([]); // No events available
         return;
       }
       const eventsData = [];
@@ -25,7 +26,7 @@ function EventList({ contract, account, reserveSpot }) {
           hasReserved,
         });
       }
-      setEvents(eventsData);
+      setEventsData(eventsData);
     } catch (error) {
       toast.error("Error fetching events: " + error.message);
     }
@@ -36,18 +37,40 @@ function EventList({ contract, account, reserveSpot }) {
   }, [fetchEvents]);
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-2xl font-semibold text-gray-800">Available Events</h2>
-      {events.length === 0 ? (
-        <p className="text-gray-600">No events available</p>
+    <div className="events-container">
+      <h2>Événements disponibles</h2>
+      
+      {eventsData.length === 0 ? (
+        <p>Aucun événement disponible.</p>
       ) : (
-        events.map((event) => (
-          <EventItem
-            key={event.id}
-            event={event}
-            reserveSpot={reserveSpot}
-          />
-        ))
+        <div className="event-list">
+          {eventsData.map((event) => (
+            <div key={event.id} className="event-card">
+              <h3>{event.name}</h3>
+              <div className="event-details">
+                <p>Capacité totale: {event.capacity}</p>
+                <p>Places réservées: {event.registered}</p>
+                <p>Places restantes: {event.capacity - event.registered}</p>
+              </div>
+              
+              <div className="event-action">
+                {event.hasReserved ? (
+                  <span className="reserved-badge">Déjà réservé</span>
+                ) : event.registered >= event.capacity ? (
+                  <span className="full-badge">Complet</span>
+                ) : (
+                  <button 
+                    onClick={() => reserveEvent(event.id)} 
+                    disabled={loading}
+                    className="reserve-button"
+                  >
+                    {loading ? 'Traitement...' : 'Réserver une place'}
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );
